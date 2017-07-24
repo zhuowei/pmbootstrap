@@ -1,0 +1,127 @@
+# APKBUILD based on linux-vanilla aport. Changes:
+# - disabled module installation
+# - add !check !tracedeps
+# - package: just install zimage and kernel.release, because the kernel config
+#	does not generate modules or dtb files
+# - do not create -dev subpackage (makes no sense without module support)
+#
+# Kernel config based on: arch/arm/configs/fairphone-perf_defconfig
+# Changes:
+# - enable devtmpfs (needed for udev -> touch support in weston)
+
+_vendor=fairphone
+_flavor=fairphone-fp2
+_hash="4c0f2c3c6f394162fdb98f5e20dec346e8f4cfdc"
+_config="config-${_flavor}.armhf"
+
+pkgname=linux-${_flavor}
+pkgver=3.4.0
+case $pkgver in
+	*.*.*)  _kernver=${pkgver%.*};;
+	*.*) _kernver=$pkgver;;
+esac
+pkgrel=1
+arch="armhf"
+pkgdesc="LineageOS kernel for Fairphone 2"
+url="https://github.com/LineageOS/android_kernel_fairphone_msm8974"
+depends="postmarketos-mkinitfs"
+makedepends="perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev python2"
+options="!strip !check !tracedeps"
+install=
+source="
+	https://github.com/LineageOS/android_kernel_fairphone_msm8974/archive/${_hash}.zip
+	${_config}
+	compiler-gcc6.h
+	aeea3592a13bf12861943e44fc48f1f270941f8d.patch
+	gpu-msm-fix-gcc5-compile.patch
+	bd447b61c49fc26f0299587db3e6d66da49dc529.patch
+	bde304575f3ecaa9570a9329196dffaadf3adafa.patch
+"
+subpackages=""
+license="GPL2"
+
+_abi_release=${pkgver}
+_carch="arm"
+HOSTCC="${CC:-gcc}"
+HOSTCC="${HOSTCC#${CROSS_COMPILE}}"
+
+ksrcdir="$srcdir/android_kernel_fairphone_msm8974-${_hash}"
+
+prepare() {
+	local _patch_failed=
+	cd "$ksrcdir"
+
+	# first apply patches in specified order
+	for i in $source; do
+		case $i in
+		*.patch)
+			msg "Applying $i..."
+			if ! patch -s -p1 -N -i "$srcdir"/$i; then
+				echo $i >>failed
+				_patch_failed=1
+			fi
+			;;
+		esac
+	done
+
+	if ! [ -z "$_patch_failed" ]; then
+		error "The following patches failed:"
+		cat failed
+		return 1
+	fi
+
+	# gcc6 support
+	cp -v "$srcdir/compiler-gcc6.h" "$ksrcdir/include/linux/"
+
+	mkdir -p "$srcdir"/build
+	cp "$srcdir"/$_config "$srcdir"/build/.config || return 1
+	echo "--[ silentoldconfig ]--"
+	yes "" | make -C "$ksrcdir" O="$srcdir"/build ARCH="$_carch" HOSTCC="$HOSTCC" \
+		oldconfig
+}
+
+
+
+# this is so we can do: 'abuild menuconfig' to reconfigure kernel
+menuconfig() {
+	cd "$srcdir"/build || return 1
+	echo "--[ menuconfig ]--"
+	make ARCH="$_carch" menuconfig
+	cp .config "$startdir"/$_config
+}
+
+build() {
+	cd "$srcdir"/build
+	unset LDFLAGS
+	make ARCH="$_carch" CC="${CC:-gcc}" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-Alpine" CONFIG_NO_ERROR_ON_MISMATCH=y \
+		|| return 1
+	echo "--[ Build modules ]--"
+	make ARCH="$_carch" CC="${CC:-gcc}" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-Alpine" CONFIG_NO_ERROR_ON_MISMATCH=y \
+		modules || return 1
+}
+
+package() {
+	install -Dm644 "$srcdir/build/arch/arm/boot/zImage-dtb" \
+		"$pkgdir/boot/vmlinuz-$_flavor"
+
+	install -D "$srcdir/build/include/config/kernel.release" \
+		"$pkgdir/usr/share/kernel/$_flavor/kernel.release"
+
+	cd "$srcdir"/build
+	unset LDFLAGS
+	echo "--[ Installing modules ]--"
+	make ARCH="$_carch" CC="${CC:-gcc}" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-Alpine" CONFIG_NO_ERROR_ON_MISMATCH=y \
+		INSTALL_MOD_PATH="$pkgdir" modules_install \
+		|| return 1
+}
+
+sha512sums="0120c3b27f14974d9321fc07495e0b266723853d49379d2ce47c41d1ecf0c9818e2c9a0a958ff2ee2926999fcd53ce6ec67166846d9168458e89227f7995002d  4c0f2c3c6f394162fdb98f5e20dec346e8f4cfdc.zip
+dee233ba678f3314c8df411d3db1eb46fab091f29a9f2cac0b45b4af24f896e3aa178393095b8287dbca1bcbed7a846a1f091e1239568d3ec6ee96732e98c779  config-fairphone-fp2.armhf
+d80980e9474c82ba0ef1a6903b434d8bd1b092c40367ba543e72d2c119301c8b2d05265740e4104ca1ac5d15f6c4aa49e8776cb44264a9a28dc551e0d1850dcc  compiler-gcc6.h
+ea1d3b5a234fa565e3c1a792de48f4fc4e6023d281d303c8e319c7ef28edc5739ab0e4dea0139a41f0a5c7d03e27921ccaa214fd0ac5c72245a094ce60128864  aeea3592a13bf12861943e44fc48f1f270941f8d.patch
+7be03a9e78b7ac330a54b1f00509caa0621a95c0c55901878ad757f9dd69cc05ba2c8b5ea987063ae1224f92c4d090d515fa5d369e7755181a4871b0d0f82881  gpu-msm-fix-gcc5-compile.patch
+033bf57d104d829021a83a646c1152f88364e0c1cc5592eba68ba40db840eca5a00b1dc517e0ba5b23b71427d6e7236313a2a25a50fa3a48257dedc77d8b9163  bd447b61c49fc26f0299587db3e6d66da49dc529.patch
+2e9d75f16da3632d48f2ad920b001ae5d67c7b21a7eea341543a7226b4275b61dc2a3b2a5339c604f78db1dcdc43d46e899b45421754c422b43586ccf9aefff6  bde304575f3ecaa9570a9329196dffaadf3adafa.patch"
