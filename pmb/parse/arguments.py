@@ -36,9 +36,9 @@ def arguments_flasher(subparser):
     boot = sub.add_parser("boot", help="boot a kernel once")
     boot.add_argument("--cmdline", help="override kernel commandline")
     flash_kernel = sub.add_parser("flash_kernel", help="flash a kernel")
-    export = sub.add_parser("export", help="create convenience symlinks to the"
-                                           " generated image files (system,"
-                                           " kernel, initramfs, boot.img, ...)")
+    export_help = ("create convenience symlinks to generated image files"
+                   " (system, kernel, initramfs, boot.img, ...)")
+    export = sub.add_parser("export", help=export_help)
     for action in [boot, flash_kernel, export]:
         action.add_argument("--flavor", default=None)
 
@@ -48,6 +48,10 @@ def arguments_flasher(subparser):
                         default="/tmp/postmarketOS-export", nargs="?")
     export.add_argument("--odin", help="odin flashable tar (boot.img/kernel+initramfs only)",
                         action="store_true", dest="odin_flashable_tar")
+
+    # Export: shortcut "pmbootstrap export"
+    subparser.add_parser("export", help=export_help, add_help=False,
+                         parents=[export])
     return ret
 
 
