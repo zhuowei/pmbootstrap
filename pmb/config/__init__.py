@@ -63,7 +63,11 @@ defaults = {
     "cipher": "aes-cbc-plain64",
     # A higher value is typically desired, but this can lead to VERY long open
     # times on slower devices
-    "iter_time": "500"
+    "iter_time": "500",
+    # Hash algorithm to use, note that SHA1 is considered fine even though default
+    # for cryptsetup is sha256:
+    # https://www.kernel.org/pub/linux/utils/cryptsetup/v1.7/v1.7.0-ReleaseNotes
+    "crypt_hash": "sha1"
 }
 
 #
