@@ -60,7 +60,10 @@ defaults = {
 
     # aes-xts-plain64 would be better, but this is not supported on LineageOS
     # kernel configs
-    "cipher": "aes-cbc-plain64"
+    "cipher": "aes-cbc-plain64",
+    # A higher value is typically desired, but this can lead to VERY long open
+    # times on slower devices
+    "iter_time": "500"
 }
 
 #
