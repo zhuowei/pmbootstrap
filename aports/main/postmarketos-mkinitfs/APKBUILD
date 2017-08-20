@@ -1,4 +1,4 @@
-pkgname=postmarketos-mkinitfs
+gpkgname=postmarketos-mkinitfs
 pkgver=0.3.4
 pkgrel=0
 pkgdesc="Tool to generate initramfs images for postmarketOS"
