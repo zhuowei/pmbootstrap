@@ -1,8 +1,8 @@
-_hash="debd421f276bbad1d0973ba97c69a771c08fe9f4"
+_hash="f1f7b485b79df06622a41efae1a9c277b9b2fc75"
 
 pkgname=osk-sdl
 pkgver=1
-pkgrel=4
+pkgrel=5
 pkgdesc="Onscreen Keyboard for Framebuffer"
 url="https://github.com/postmarketOS/osk-sdl"
 arch="all"
@@ -24,6 +24,6 @@ package() {
     install -D -m755 "${srcdir}/${pkgname}-${_hash}"/osk-sdl \
         "$pkgdir"/usr/bin/osk-sdl
     install -D -m755 "${srcdir}/${pkgname}-${_hash}"/osk.conf \
-        "$pkgdir"/osk.conf
+        "$pkgdir"/etc/osk.conf
 }
-sha512sums="d0f1f6d277427c664d9f8c1210661ee58bd41b6076ef8871cb5fc35f5362f5e91015adf5e07dce409b3c92436db2af724ffc78880de04277f61122a6632f6ea6  osk-sdl-debd421f276bbad1d0973ba97c69a771c08fe9f4.tar.gz"
+sha512sums="3e0be8cd14d92ecb48c571f1413fe6c757cf32e7e6827c68c822ca8a6b5508e2f572363666945e35ca44879473dffcf47a435e9ec4bfc0bbc70d3465996c7e05  osk-sdl-f1f7b485b79df06622a41efae1a9c277b9b2fc75.tar.gz"
