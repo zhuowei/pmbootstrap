@@ -72,16 +72,25 @@ find_root_partition() {
 	# what we want.
 	#
 	# To deal with the side-effect, we use the partitions from
-	# /dev/mapper first, and then fall back to partitions with all paths
-	# (in case the user inserted an SD card after mount_subpartitions()
-	# ran!).
+	# /dev/dm-* and /dev/mapper first, and then fall back to partitions
+	# with all paths (in case the user inserted an SD card after
+	# mount_subpartitions() ran!).
 
-	# Try the partitions in /dev/mapper first.
+	# Try partitions in /dev/dm-* first
 	for id in pmOS_root crypto_LUKS; do
-		DEVICE="$(blkid | grep /dev/mapper | grep "$id" \
+		DEVICE="$(blkid | grep /dev/dm | grep "$id" \
 			| cut -d ":" -f 1)"
 		[ -z "$DEVICE" ] || break
 	done
+
+	# Try the partitions in /dev/mapper next.
+	if [ -z "$DEVICE" ]; then
+		for id in pmOS_root crypto_LUKS; do
+			DEVICE="$(blkid | grep /dev/mapper | grep "$id" \
+				| cut -d ":" -f 1)"
+			[ -z "$DEVICE" ] || break
+		done
+	fi
 
 	# Then try all devices
 	if [ -z "$DEVICE" ]; then
@@ -159,11 +168,10 @@ resize_root_partition() {
 }
 
 unlock_root_partition() {
-	partition="$(find_root_partition)"
+ 	partition="$(find_root_partition)"
 	if cryptsetup isLuks "$partition"; then
 		until cryptsetup status root | grep -qwi active; do
-			start_usb_unlock
-			cryptsetup luksOpen "$partition" root || continue
+			osk-sdl -n root -d "$partition" -c /etc/osk.conf > /osk-sdl.log 2>&1 || continue
 		done
 		# Show again the loading splashscreen
 		show_splash /splash-loading.ppm.gz
