@@ -1,6 +1,6 @@
 pkgname=device-nokia-rx51
 pkgver=1
-pkgrel=14
+pkgrel=15
 pkgdesc="Nokia N900"
 url="https://github.com/postmarketOS"
 arch="noarch"
@@ -47,7 +47,7 @@ package() {
                 "$pkgdir"/usr/share/bkeymaps/us/rx51_us.bmap.gz
 }
 
-sha512sums="cecba9a4a5ba6ddd736e4a46eecac20865d6c4d7a2d95efbbc33d1e8cacf9e3583aa80118fd5044da6ee08997d9d2c59af4f896692859b6e2e39e55fa515b566  deviceinfo
+sha512sums="998790a43f6994ef919ac5b629ef23d76e3bcdf5e80987af996bec71c86bace7510e1ca59c20b14faf79dc986ad8c74c5cb5c44c9043905e877ebecc06232b4c  deviceinfo
 a6d1c097bdc06f6d93527487d3779e20d16e290421615de5fa13a3b41bc318f44a35ec9058acd107290ce407f99f74f7dbfcf48b363c9f580c394cec4ba50e77  uboot-script.cmd
 3d55e34b95791636e44a5f41754f3d0de039dbba41f7a556d43a95c9e64afcfa930046b4b96b40020b6f196096ffba93514682927e32fa4488686fdd19c6da5a  backlight-enable.sh
 98c554a709d6e8da5835bd792d833355d830fca1cfea12ec7fe4f41d1d1126389c51a8a392a7f94093473c19263cc6846cc40d7e179c2facf12db2d68ff923f9  90-touchscreen-dev.rules
