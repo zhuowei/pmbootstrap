@@ -100,71 +100,37 @@ get_binaries()
 	lddtree -l $BINARIES | sort -u
 }
 
+# Collect non-binary files for osk-sdl and its dependencies
+get_osk_config()
+{
+	tmp1=$(mktemp /tmp/mkinitfs.XXXXXX)
+	fontpath=$(awk '/^keyboard-font/{print $3}' /etc/osk.conf)
+	if [! -f $fontpath ]; then
+		echo "WARNING: Font specified in /etc/osk.conf does not exist!!!"
+		echo "WARNING: Onscreen Keyboard may not function as expected!!!"
+	fi
+	ret="
+		/etc/osk.conf
+		/etc/ts.conf
+		/etc/pointercal
+		$fontpath
+	"
+	echo "${ret}"
+}
+
 get_binaries_extra()
 {
 	BINARIES_EXTRA="
-		/usr/bin/strace
 		/sbin/cryptsetup
 		/sbin/dmsetup
 		/usr/sbin/parted
 		/sbin/e2fsck
 		/usr/sbin/resize2fs
 		/usr/bin/osk-sdl
-		/etc/osk.conf
-		/etc/ts.conf
-		/etc/pointercal
-		/usr/share/fonts/ttf-droid/DroidSans.ttf
-		/usr/lib/libts.so.0
-		/usr/lib/libts.so.0.7.1
-		/usr/lib/ts/iir.so
-		/usr/lib/ts/linear.so
-		/usr/lib/ts/dejitter.so
-		/usr/lib/ts/dmc.so
-		/usr/lib/ts/tatung.so
-		/usr/lib/ts/pthres.so
-		/usr/lib/ts/mk712.so
-		/usr/lib/ts/galax.so
-		/usr/lib/ts/median.so
-		/usr/lib/ts/linear_h2200.so
-		/usr/lib/ts/skip.so
-		/usr/lib/ts/h3600.so
-		/usr/lib/ts/debounce.so
-		/usr/lib/ts/arctic2.so
-		/usr/lib/ts/input.so
-		/usr/lib/ts/touchkit.so
-		/usr/lib/ts/ucb1x00.so
-		/usr/lib/ts/corgi.so
-		/usr/lib/ts/waveshare.so
-		/usr/lib/ts/collie.so
-		/usr/lib/ts/variance.so
 		/usr/lib/libGL.so.1
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBWindows/libidirectfbwindows_default.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBVideoProvider/libidirectfbvideoprovider_v4l.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBVideoProvider/libidirectfbvideoprovider_gif.so
-		/usr/lib/directfb-1.7-7/interfaces/IWater/libiwater_default.so
-		/usr/lib/directfb-1.7-7/interfaces/ICoreResourceManager/libicoreresourcemanager_test.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBImageProvider/libidirectfbimageprovider_mpeg2.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBImageProvider/libidirectfbimageprovider_png.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBImageProvider/libidirectfbimageprovider_gif.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBImageProvider/libidirectfbimageprovider_pnm.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBImageProvider/libidirectfbimageprovider_bmp.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBImageProvider/libidirectfbimageprovider_dfiff.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBFont/libidirectfbfont_dgiff.so
-		/usr/lib/directfb-1.7-7/interfaces/IDirectFBFont/libidirectfbfont_ft2.so
-		/usr/lib/directfb-1.7-7/gfxdrivers/libdirectfb_mach64.so
-		/usr/lib/directfb-1.7-7/gfxdrivers/libdirectfb_vmware.so
-		/usr/lib/directfb-1.7-7/gfxdrivers/libdirectfb_omap.so
-		/usr/lib/directfb-1.7-7/inputdrivers/libdirectfb_serialmouse.so
-		/usr/lib/directfb-1.7-7/inputdrivers/libdirectfb_linux_input.so
-		/usr/lib/directfb-1.7-7/inputdrivers/libdirectfb_ps2mouse.so
-		/usr/lib/directfb-1.7-7/inputdrivers/libdirectfb_keyboard.so
-		/usr/lib/directfb-1.7-7/inputdrivers/libdirectfb_input_hub.so
-		/usr/lib/directfb-1.7-7/inputdrivers/libdirectfb_tslib.so
-		/usr/lib/directfb-1.7-7/wm/libdirectfbwm_default.so
-		/usr/lib/directfb-1.7-7/systems/libdirectfb_fbdev.so
-		/usr/lib/directfb-1.7-7/systems/libdirectfb_drmkms_system.so
-		/usr/lib/directfb-1.7-7/systems/libdirectfb_dummy.so
-		/usr/lib/directfb-1.7-7/systems/libdirectfb_devmem.so
+		/usr/lib/ts/*
+		/usr/lib/libts*
+		$(find /usr/lib/directfb-1.7-7 -name '*.so')
 	"
 	tmp1=$(mktemp /tmp/mkinitfs.XXXXXX)
 	get_binaries > "$tmp1"
@@ -330,6 +296,7 @@ tmpdir_extra=$(mktemp -d /tmp/mkinitfs.XXXXXX)
 # set up initfs-extra in temp folder
 mkdir -p "$tmpdir_extra"
 copy_files "$(get_binaries_extra)" "$tmpdir_extra"
+copy_files "$(get_osk_config)" "$tmpdir_extra"
 
 # finish up
 create_cpio_image "$tmpdir_extra" "$outfile_extra"
