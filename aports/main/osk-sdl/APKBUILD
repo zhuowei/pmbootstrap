@@ -1,4 +1,4 @@
-_hash="f1f7b485b79df06622a41efae1a9c277b9b2fc75"
+_hash="d9d75fd46e55f7b5371c73e99303a9cf1a03e013"
 
 pkgname=osk-sdl
 pkgver=1
@@ -26,4 +26,4 @@ package() {
     install -D -m755 "${srcdir}/${pkgname}-${_hash}"/osk.conf \
         "$pkgdir"/etc/osk.conf
 }
-sha512sums="3e0be8cd14d92ecb48c571f1413fe6c757cf32e7e6827c68c822ca8a6b5508e2f572363666945e35ca44879473dffcf47a435e9ec4bfc0bbc70d3465996c7e05  osk-sdl-f1f7b485b79df06622a41efae1a9c277b9b2fc75.tar.gz"
+sha512sums="8f16a6d4ec52b8c7505fd41bb5f68417f6d47dae711665629db2d63bbf1baf3cf0a4981acd7d3c540b190263f63e975bf9d9b6f8fb577ce825a100e491971d66  osk-sdl-d9d75fd46e55f7b5371c73e99303a9cf1a03e013.tar.gz"
