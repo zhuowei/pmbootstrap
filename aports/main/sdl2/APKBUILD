@@ -1,6 +1,6 @@
 pkgname=sdl2
 pkgver=2.0.5
-pkgrel=0
+pkgrel=9999
 _pkgname=SDL2
 pkgdesc="A development library designed to provide low level access to audio, keyboard, mouse, joystick and graphics"
 url="http://www.libsdl.org"
