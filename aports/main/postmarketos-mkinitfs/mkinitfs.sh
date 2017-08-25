@@ -103,9 +103,8 @@ get_binaries()
 # Collect non-binary files for osk-sdl and its dependencies
 get_osk_config()
 {
-	tmp1=$(mktemp /tmp/mkinitfs.XXXXXX)
 	fontpath=$(awk '/^keyboard-font/{print $3}' /etc/osk.conf)
-	if [! -f $fontpath ]; then
+	if [ ! -f $fontpath ]; then
 		echo "WARNING: Font specified in /etc/osk.conf does not exist!!!"
 		echo "WARNING: Onscreen Keyboard may not function as expected!!!"
 	fi
@@ -131,6 +130,7 @@ get_binaries_extra()
 		/usr/lib/ts/*
 		/usr/lib/libts*
 		$(find /usr/lib/directfb-1.7-7 -name '*.so')
+		/lib/libz.so.1
 	"
 	tmp1=$(mktemp /tmp/mkinitfs.XXXXXX)
 	get_binaries > "$tmp1"
