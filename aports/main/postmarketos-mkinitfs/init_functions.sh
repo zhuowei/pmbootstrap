@@ -168,7 +168,7 @@ resize_root_partition() {
 }
 
 unlock_root_partition() {
- 	partition="$(find_root_partition)"
+	partition="$(find_root_partition)"
 	if cryptsetup isLuks "$partition"; then
 		until cryptsetup status root | grep -qwi active; do
 			osk-sdl -n root -d "$partition" -c /etc/osk.conf > /osk-sdl.log 2>&1 || continue
