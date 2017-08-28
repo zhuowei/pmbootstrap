@@ -4,18 +4,6 @@
 . ./init_functions.sh
 
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
-# Set up directfb and tslib for osk-sdl
-export DFBARGS="system=fbdev,no-cursor"
-export SDL_VIDEO_GL_DRIVER="libGL.so.1"
-# shellcheck disable=SC2154
-if [ ! -z "$deviceinfo_touchscreen_dev" ]; then
-	export TSLIB_TSDEVICE="$deviceinfo_touchscreen_dev"
-fi
-# shellcheck disable=SC2154
-if [ ! -z "$deviceinfo_hw_keyboard_dev" ]; then
-	export DFBARGS="$DFBARGS,linux-input-devices=$deviceinfo_hw_keyboard_dev"
-fi
-
 /bin/busybox --install -s
 /bin/busybox-extras --install -s
 
@@ -56,9 +44,6 @@ umount /proc
 umount /sys
 umount /dev/pts
 umount /dev
-unset DFBARGS
-unset SDL_VIDEO_GL_DRIVER
-unset TSLIB_TSDEVICE
 
 # shellcheck disable=SC2093
 exec switch_root /sysroot /sbin/init

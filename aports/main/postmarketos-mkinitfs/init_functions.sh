@@ -171,7 +171,7 @@ unlock_root_partition() {
 	partition="$(find_root_partition)"
 	if cryptsetup isLuks "$partition"; then
 		until cryptsetup status root | grep -qwi active; do
-			osk-sdl -n root -d "$partition" -c /etc/osk.conf > /osk-sdl.log 2>&1 || continue
+			start_onscreen_keyboard
 		done
 		# Show again the loading splashscreen
 		show_splash /splash-loading.ppm.gz
@@ -293,6 +293,25 @@ start_usb_unlock() {
 	} >/telnet_connect.sh
 	chmod +x /telnet_connect.sh
 	telnetd -b "${IP}:${TELNET_PORT}" -l /telnet_connect.sh
+}
+
+start_onscreen_keyboard(){
+	# Set up directfb and tslib for osk-sdl
+	export DFBARGS="system=fbdev,no-cursor"
+	export SDL_VIDEO_GL_DRIVER="libGL.so.1"
+	# shellcheck disable=SC2154
+	if [ ! -z "$deviceinfo_touchscreen_dev" ]; then
+		export TSLIB_TSDEVICE="$deviceinfo_touchscreen_dev"
+	fi
+	# shellcheck disable=SC2154
+	if [ ! -z "$deviceinfo_hw_keyboard_dev" ]; then
+		export DFBARGS="$DFBARGS,linux-input-devices=$deviceinfo_hw_keyboard_dev"
+	fi
+
+	osk-sdl -n root -d "$partition" -c /etc/osk.conf > /osk-sdl.log 2>&1
+	unset DFBARGS
+	unset SDL_VIDEO_GL_DRIVER
+	unset TSLIB_TSDEVICE
 }
 
 # $1: path to ppm.gz file
