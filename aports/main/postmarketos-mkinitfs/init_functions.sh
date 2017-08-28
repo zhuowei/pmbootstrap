@@ -300,12 +300,12 @@ start_onscreen_keyboard(){
 	export DFBARGS="system=fbdev,no-cursor"
 	export SDL_VIDEO_GL_DRIVER="libGL.so.1"
 	# shellcheck disable=SC2154
-	if [ ! -z "$deviceinfo_touchscreen_dev" ]; then
-		export TSLIB_TSDEVICE="$deviceinfo_touchscreen_dev"
+	if [ ! -z "$deviceinfo_dev_touchscreen" ]; then
+		export TSLIB_TSDEVICE="$deviceinfo_dev_touchscreen"
 	fi
 	# shellcheck disable=SC2154
-	if [ ! -z "$deviceinfo_hw_keyboard_dev" ]; then
-		export DFBARGS="$DFBARGS,linux-input-devices=$deviceinfo_hw_keyboard_dev"
+	if [ ! -z "$deviceinfo_dev_keyboard" ]; then
+		export DFBARGS="$DFBARGS,linux-input-devices=$deviceinfo_dev_keyboard"
 	fi
 
 	osk-sdl -n root -d "$partition" -c /etc/osk.conf > /osk-sdl.log 2>&1
