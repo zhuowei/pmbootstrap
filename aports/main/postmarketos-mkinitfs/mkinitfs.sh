@@ -105,8 +105,8 @@ get_osk_config()
 {
 	fontpath=$(awk '/^keyboard-font/{print $3}' /etc/osk.conf)
 	if [ ! -f $fontpath ]; then
-		echo "WARNING: Font specified in /etc/osk.conf does not exist!!!"
-		echo "WARNING: Onscreen Keyboard may not function as expected!!!"
+		echo "ERROR: Font specified in /etc/osk.conf does not exist!"
+		exit 1
 	fi
 	ret="
 		/etc/osk.conf
