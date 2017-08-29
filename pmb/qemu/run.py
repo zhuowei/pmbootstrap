@@ -163,8 +163,8 @@ def qemu_command(args, arch, device, img_path, config):
     if config["enable_spice"]:
         command += ["-vga", "qxl"]
         command += ["-spice",
-                    "port={spice_port},addr={spice_addr}".format(**config)
-                    + ",disable-ticketing"]
+                    "port={spice_port},addr={spice_addr}".format(**config) +
+                    ",disable-ticketing"]
 
     return command
 
