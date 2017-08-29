@@ -257,6 +257,8 @@ def arguments():
                       help="guest RAM (default: 1024)")
     qemu.add_argument("-p", "--port", type=int, default=2222,
                       help="ssh port (default: 2222)")
+    qemu.add_argument("--no-spice", default=False, action="store_true",
+                      help="do not use SPICE")
 
     # Use defaults from the user's config file
     args = parser.parse_args()
