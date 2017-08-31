@@ -1,5 +1,5 @@
 pkgname=osk-sdl
-pkgver=0.4
+pkgver=0.41
 pkgrel=0
 pkgdesc="Onscreen keyboard for unlocking LUKS devices"
 url="https://github.com/postmarketOS/osk-sdl"
@@ -23,4 +23,4 @@ package() {
     install -D -m755 "${srcdir}/${pkgname}-${pkgver}"/osk.conf \
         "$pkgdir"/etc/osk.conf
 }
-sha512sums="d25acdd5c15f2f069018825ea74c156c86d0f56677d426b05b7ccb06dbf093caec597fad69c020865221b438b4d9cc58ae540a2907d41307280c0bcb619ab493  osk-sdl-0.4-0.tar.gz"
+sha512sums="ccf965c1b9fbb3b39588b3e640228ca2c6076de5a944f918da056f142613f56fe3273717c4e8abbb22b27d18c3c89f5505d79dafc80310ebceeb2efd91ec9b0e  osk-sdl-0.41-0.tar.gz"
