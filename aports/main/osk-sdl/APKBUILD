@@ -23,4 +23,4 @@ package() {
     install -D -m755 "${srcdir}/${pkgname}-${pkgver}"/osk.conf \
         "$pkgdir"/etc/osk.conf
 }
-sha512sums="ccf965c1b9fbb3b39588b3e640228ca2c6076de5a944f918da056f142613f56fe3273717c4e8abbb22b27d18c3c89f5505d79dafc80310ebceeb2efd91ec9b0e  osk-sdl-0.41-0.tar.gz"
+sha512sums="86d84d61834721f8dafa0a88fb67eb428e7f0fa782c8de251c0accad9a867210b7cc444f9b14e47c53e10683a4f2bc45dd51c35ec6b1aee9323b510764c58ec9  osk-sdl-0.41-0.tar.gz"
