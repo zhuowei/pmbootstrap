@@ -1,14 +1,14 @@
 pkgname=sdl2
 pkgver=9999
 _pkgver=2.0.5
-pkgrel=0
+pkgrel=1
 _pkgname=SDL2
 pkgdesc="A development library designed to provide low level access to audio, keyboard, mouse, joystick and graphics"
 url="http://www.libsdl.org"
 arch="all"
 license="zlib"
-depends="directfb"
-depends_dev="alsa-lib-dev libxcursor-dev libxrandr-dev libxrender-dev mesa-dev directfb"
+depends="directfb tslib"
+depends_dev="alsa-lib-dev libxcursor-dev libxrandr-dev libxrender-dev mesa-dev directfb tslib-dev"
 makedepends="$depends_dev"
 subpackages="$pkgname-dev"
 source="https://www.libsdl.org/release/$_pkgname-$_pkgver.tar.gz
