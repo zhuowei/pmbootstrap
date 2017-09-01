@@ -306,6 +306,9 @@ start_onscreen_keyboard(){
 	# shellcheck disable=SC2154
 	if [ ! -z "$deviceinfo_dev_keyboard" ]; then
 		export DFBARGS="$DFBARGS,linux-input-devices=$deviceinfo_dev_keyboard"
+	else
+		# Use SDL for input management
+		export DFBARGS="$DFBARGS,disable-module=linux_input"
 	fi
 
 	osk-sdl -n root -d "$partition" -c /etc/osk.conf > /osk-sdl.log 2>&1
