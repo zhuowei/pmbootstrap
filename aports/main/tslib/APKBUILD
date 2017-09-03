@@ -1,5 +1,5 @@
 pkgname=tslib
-pkgver=1.11
+pkgver=1.12
 pkgrel=0
 pkgdesc="Touchscreen Access Library"
 arch="all"
@@ -20,4 +20,4 @@ package() {
     cd $srcdir/$pkgname-$pkgver
     make DESTDIR="$pkgdir" install
 }
-sha512sums="c4826fc0b3e13ed8714e6d7f09e4b047fd4c2568426aac2a70e9812b9b472086a5a9a8f9e2ba80905e2f3fe75cdc1a09c8e7349d10a016808c74a09d82a0a874  tslib-1.11.tar.xz"
+sha512sums="417315496ab668ed82a84487986580cc9bd69288c3344e38cb12578ede90a3d16c9ab84362b2b12ebdc70847a0a380249f434210b6c28bda2b1f6685ab96acf8  tslib-1.12.tar.xz"
