@@ -55,6 +55,10 @@ mount_subpartitions() {
 }
 
 find_root_partition() {
+	echo "172.16.42.5:/media/zhuowei/redhd/docs/nfspmroot/pmOS_root"
+}
+
+find_root_partition2() {
 	# The partition layout is one of the following:
 	# a) boot, root partitions on sdcard
 	# b) boot, root partition on the "system" partition (which has its
@@ -94,7 +98,8 @@ find_root_partition() {
 }
 
 find_boot_partition() {
-	findfs LABEL="pmOS_boot"
+	#findfs LABEL="pmOS_boot"
+	echo "172.16.42.5:/media/zhuowei/redhd/docs/nfspmroot/pmOS_boot"
 }
 
 mount_boot_partition() {
@@ -105,7 +110,7 @@ mount_boot_partition() {
 		loop_forever
 	fi
 	echo "Mount boot partition ($partition)"
-	mount -r "$partition" /boot
+	mount -o "port=2049,nolock,proto=tcp" -r "$partition" /boot
 }
 
 # $1: initramfs-extra path
@@ -174,15 +179,16 @@ resize_root_filesystem() {
 	partition="$(find_root_partition)"
 	touch /etc/mtab # see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=673323
 	echo "Check/repair root filesystem ($partition)"
-	e2fsck -f -y "$partition"
+	#e2fsck -f -y "$partition"
 	echo "Resize root filesystem ($partition)"
-	resize2fs -f "$partition"
+	#resize2fs -f "$partition"
 }
 
 mount_root_partition() {
 	partition="$(find_root_partition)"
 	echo "Mount root partition ($partition)"
-	mount -w -t ext4 "$partition" /sysroot
+	#mount -w -t ext4 "$partition" /sysroot
+	mount -w -o "port=2049,nolock,proto=tcp" "$partition" /sysroot
 	if ! [ -e /sysroot/usr ]; then
 		echo "ERROR: unable to mount root partition!"
 		show_splash /splash-mounterror.ppm.gz
@@ -250,8 +256,8 @@ start_udhcpd() {
 
 	# Create /etc/udhcpd.conf
 	{
-		echo "start 172.16.42.2"
-		echo "end 172.16.42.254"
+		echo "start 172.16.42.5"
+		echo "end 172.16.42.5"
 		echo "lease_file /var/udhcpd.leases"
 		echo "interface $INTERFACE"
 		echo "option subnet 255.255.255.0"
