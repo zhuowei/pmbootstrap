@@ -1,0 +1,102 @@
+From 45e92a17c7006d36a54bfbc2f4a35281fbd7b58c Mon Sep 17 00:00:00 2001
+From: Zhuowei Zhang <zhuoweizhang@yahoo.com>
+Date: Mon, 11 Sep 2017 11:13:18 -0400
+Subject: [PATCH] compsitor-fbdev: add Force FBIOPUT workaround for MSM
+ framebuffer
+
+Qualcomm MSM devices have a framebuffer that only updates the display after
+a FBIOPUT, as they are intended for double buffered operation only.
+Add a hack to do a FBIOGET/FBIOPUT pair every frame to force an update.
+---
+ libweston/compositor-fbdev.c | 40 +++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 39 insertions(+), 1 deletion(-)
+
+diff --git a/libweston/compositor-fbdev.c b/libweston/compositor-fbdev.c
+index b7d2c74..bce8d68 100644
+--- a/libweston/compositor-fbdev.c
++++ b/libweston/compositor-fbdev.c
+@@ -75,6 +75,8 @@ struct fbdev_screeninfo {
+ 
+ 	pixman_format_code_t pixel_format; /* frame buffer pixel format */
+ 	unsigned int refresh_rate; /* Hertz */
++	int fb_fd; /* required for force_fbioput */
++	bool force_fbioput; /* force a FBIOPUT_VSCREENINFO after every frame; required by Qualcomm framebuffer */
+ };
+ 
+ struct fbdev_output {
+@@ -141,6 +143,21 @@ fbdev_output_repaint(struct weston_output *base, pixman_region32_t *damage,
+ 	 * refresh rate is given in mHz and the interval in ms. */
+ 	wl_event_source_timer_update(output->finish_frame_timer,
+ 	                             1000000 / output->mode.refresh);
++	if (output->fb_info.force_fbioput) {
++		/* Qualcomm's framebuffer only supports double buffering,
++		 * where after every frame the application performs a FBIOPUT_VSCREENINFO
++		 * to flip buffers. Since we don't double buffer, just grab the existing screeninfo.
++		 */
++		struct fb_var_screeninfo varinfo;
++		if (ioctl(output->fb_info.fb_fd, FBIOGET_VSCREENINFO, &varinfo) < 0) {
++			weston_log("force FBIOPUT: Failed to get screeninfo after repaint\n");
++			return 0;
++		}
++		if (ioctl(output->fb_info.fb_fd, FBIOPUT_VSCREENINFO, &varinfo) < 0) {
++			weston_log("force FBIOPUT: Failed to put screeninfo after repaint\n");
++			return 0;
++		}
++	}
+ 
+ 	return 0;
+ }
+@@ -272,6 +289,17 @@ calculate_refresh_rate(struct fb_var_screeninfo *vinfo)
+ 	return 60 * 1000; /* default to 60 Hz */
+ }
+ 
++static bool
++is_msm_framebuffer(const char *id) {
++	/*
++	 * Based on TWRP's Qualcomm detection:
++	 * https://github.com/omnirom/android_bootable_recovery/blob/
++	 * b523650c8ecb6751409120a38e52a66a3e48753f/minuitwrp/graphics_overlay.cpp#L101
++	 */
++	return !strncmp("msmfb", id, sizeof("msmfb") - 1) ||
++		!strncmp("mdssfb", id, sizeof("mdssfb") - 1);
++}
++
+ static int
+ fbdev_query_screen_info(struct fbdev_output *output, int fd,
+                         struct fbdev_screeninfo *info)
+@@ -300,6 +328,11 @@ fbdev_query_screen_info(struct fbdev_output *output, int fd,
+ 	info->pixel_format = calculate_pixman_format(&varinfo, &fixinfo, output->base.pixman_type);
+ 	info->refresh_rate = calculate_refresh_rate(&varinfo);
+ 
++	/* On Qualcomm devices, enable force fbioput. */
++	info->force_fbioput = is_msm_framebuffer(info->id);
++	info->fb_fd = fd;
++	weston_log("Force FBIOPUT workaround for Qualcomm framebuffer is %s\n", info->force_fbioput? "enabled" : "disabled");
++
+ 	if (info->pixel_format == 0) {
+ 		weston_log("Frame buffer uses an unsupported format.\n");
+ 		return -1;
+@@ -418,7 +451,7 @@ out_unmap:
+ 		fbdev_frame_buffer_destroy(output);
+ 
+ out_close:
+-	if (fd >= 0)
++	if (fd >= 0 && !(output->fb_info.force_fbioput && retval == 0)) /* keep fd open if fbioput */
+ 		close(fd);
+ 
+ 	return retval;
+@@ -434,6 +467,11 @@ fbdev_frame_buffer_destroy(struct fbdev_output *output)
+ 		           strerror(errno));
+ 
+ 	output->fb = NULL;
++	if (output->fb_info.force_fbioput) {
++		/* Close the framebuffer fd if we needed it for ioctls.
++		 * In normal mode we don't need this as it was already closed after mmap. */
++		close(output->fb_info.fb_fd);
++	}
+ }
+ 
+ static void fbdev_output_destroy(struct weston_output *base);
+-- 
+1.9.1
+
