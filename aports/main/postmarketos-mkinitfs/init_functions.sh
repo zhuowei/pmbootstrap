@@ -194,6 +194,9 @@ mount_root_partition() {
 		show_splash /splash-mounterror.ppm.gz
 		loop_forever
 	fi
+	# The NFS /tmp is too small for weston; carve out a bigger one
+	# or maybe we need to increase size of NFS image? (#551)
+	mount -t tmpfs tmpfs /sysroot/tmp
 }
 
 setup_usb_network_android() {
