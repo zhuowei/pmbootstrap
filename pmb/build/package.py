@@ -51,6 +51,7 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
     suffix = pmb.build.autodetect.suffix(args, apkbuild, carch_buildenv)
     cross = pmb.build.autodetect.crosscompile(args, apkbuild, carch_buildenv,
                                               suffix)
+    native_cross_with_deps = cross == "native" and "!tracedeps" not in apkbuild["options"]
 
     # Skip already built versions
     if not force and not pmb.build.is_necessary(args, carch, apkbuild):
@@ -63,7 +64,8 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
             for makedepend in apkbuild["makedepends"]:
                 package(args, makedepend, carch_buildenv, strict=True)
         else:
-            pmb.chroot.apk.install(args, apkbuild["makedepends"], suffix)
+            deps_sysroot_suffix = "buildroot_" + carch if native_cross_with_deps else suffix
+            pmb.chroot.apk.install(args, apkbuild["makedepends"], deps_sysroot_suffix)
     if cross:
         pmb.chroot.apk.install(args, ["gcc-" + carch_buildenv,
                                       "g++-" + carch_buildenv,
@@ -86,7 +88,7 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
     logging.info("(" + suffix + ") build " + output)
 
     # Sanity check
-    if cross == "native" and "!tracedeps" not in apkbuild["options"]:
+    if native_cross_with_deps:
         logging.info("WARNING: Option !tracedeps is not set, but we're"
                      " cross-compiling in the native chroot. This will probably"
                      " fail!")
@@ -99,6 +101,23 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
         hostspec = pmb.parse.arch.alpine_to_hostspec(carch_buildenv)
         env["CROSS_COMPILE"] = hostspec + "-"
         env["CC"] = hostspec + "-gcc"
+        if native_cross_with_deps:
+            # bind mount sysroot into native and set env to point to it
+            foreign_sysroot_path = args.work + "/chroot_buildroot_" + carch
+            cbuildroot = "/home/user/cross_sysroot/chroot_buildroot_" + carch
+            bind_sysroot_path = args.work + "/chroot_native" + cbuildroot
+            pmb.helpers.mount.bind(args, foreign_sysroot_path, bind_sysroot_path)
+            # https://dev.alpinelinux.org/~tteras/bootstrap/abuild-crossbuild-aarch64.conf
+            env["CBUILDROOT"] = cbuildroot
+            env["CHOST"] = hostspec
+            env["CROSS_CFLAGS"] = "--sysroot=" + cbuildroot
+            env["CPPFLAGS"] = "--sysroot=" + cbuildroot
+            env["LDFLAGS"] = "\"--sysroot=" + cbuildroot + " -L" + cbuildroot + "/lib\""
+            # FIXME: this isn't enough; SDL's pkg-config still returns just /usr/include/SDL
+            # Need to make a wrapper script that sets these immediately before running real pkg-config
+            env["PKG_CONFIG_PATH"] = cbuildroot + "/usr/lib/pkgconfig/:" + cbuildroot + "/usr/share/pkgconfig"
+            env["PKG_CONFIG_SYSROOT_DIR"] = cbuildroot
+
     if cross == "distcc":
         env["PATH"] = "/usr/lib/distcc/bin:" + pmb.config.chroot_path
         env["DISTCC_HOSTS"] = "127.0.0.1:" + args.port_distccd
