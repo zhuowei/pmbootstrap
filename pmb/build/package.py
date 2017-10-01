@@ -59,13 +59,29 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
 
     # Initialize build environment, install/build makedepends
     pmb.build.init(args, suffix)
+    if native_cross_with_deps:
+        pmb.build.init(args, "buildroot_" + carch)
     if len(apkbuild["makedepends"]):
+        makedepends_build = apkbuild["makedepends"]
+        makedepends_host = []
+        if native_cross_with_deps:
+            if len(apkbuild["makedepends_build"]) != 0 and len(apkbuild["makedepends_host"]) != 0:
+                makedepends_build = apkbuild["makedepends_build"]
+                makedepends_host = apkbuild["makedepends_host"]
+            else:
+                makedepends_host = makedepends_build
+
         if strict:
-            for makedepend in apkbuild["makedepends"]:
+            carch_makedepends_build = args.arch_native if native_cross_with_deps else carch_buildenv
+            for makedepend in makedepends_build:
+                package(args, makedepend, carch_makedepends_build, strict=True)
+            for makedepend in makedepends_host:
                 package(args, makedepend, carch_buildenv, strict=True)
         else:
-            deps_sysroot_suffix = "buildroot_" + carch if native_cross_with_deps else suffix
-            pmb.chroot.apk.install(args, apkbuild["makedepends"], deps_sysroot_suffix)
+            pmb.chroot.apk.install(args, makedepends_build, suffix)
+            if len(makedepends_host) != 0:
+                pmb.chroot.apk.install(args, makedepends_build, "buildroot_" + carch)
+
     if cross:
         pmb.chroot.apk.install(args, ["gcc-" + carch_buildenv,
                                       "g++-" + carch_buildenv,
@@ -92,6 +108,8 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
         logging.info("WARNING: Option !tracedeps is not set, but we're"
                      " cross-compiling in the native chroot. This will probably"
                      " fail!")
+        if strict:
+            logging.info("Strict building is not supported by native cross compile yet!")
 
     # Run abuild
     pmb.build.copy_to_buildpath(args, pkgname, suffix)
@@ -112,9 +130,13 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
             env["CHOST"] = hostspec
             env["CROSS_CFLAGS"] = "--sysroot=" + cbuildroot
             env["CPPFLAGS"] = "--sysroot=" + cbuildroot
-            env["LDFLAGS"] = "\"--sysroot=" + cbuildroot + " -L" + cbuildroot + "/lib\""
-            # FIXME: this isn't enough; SDL's pkg-config still returns just /usr/include/SDL
-            # Need to make a wrapper script that sets these immediately before running real pkg-config
+            # the rpath-link is a workaround: proper solution is to add a ld.so.conf?
+            # https://sysprogs.com/w/fixing-rpath-link-issues-with-cross-compilers/
+            env["LDFLAGS"] = "\"--sysroot=" + cbuildroot + " -L" + cbuildroot + \
+                             "/lib -Wl,-rpath-link," + cbuildroot + "/lib," + \
+                             "-rpath-link," + cbuildroot + "/usr/lib\""
+            # FIXME: check if this is enough: SDL's pkg-config still returns just /usr/include/SDL?
+            # May need a wrapper script that sets these immediately before running real pkg-config
             env["PKG_CONFIG_PATH"] = cbuildroot + "/usr/lib/pkgconfig/:" + cbuildroot + "/usr/share/pkgconfig"
             env["PKG_CONFIG_SYSROOT_DIR"] = cbuildroot
 
