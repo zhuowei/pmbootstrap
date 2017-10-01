@@ -18,7 +18,10 @@ prepare() {
 
 build() {
   cd $builddir
-  ./configure --prefix=/usr --disable-static
+  ./configure \
+	--build=$CBUILD \
+	--host=$CHOST \
+	--prefix=/usr --disable-static
   make
 }
 
