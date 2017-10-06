@@ -48,10 +48,10 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
     apkbuild = pmb.parse.apkbuild(args, aport + "/APKBUILD")
     pkgname = apkbuild["pkgname"]
     carch_buildenv = pmb.build.autodetect.carch(args, apkbuild, carch, strict)
-    suffix = pmb.build.autodetect.suffix(args, apkbuild, carch_buildenv)
+    suffix = pmb.build.autodetect.suffix(args, apkbuild, carch_buildenv, strict)
     cross = pmb.build.autodetect.crosscompile(args, apkbuild, carch_buildenv,
                                               suffix)
-    native_cross_with_deps = cross == "native" and "!tracedeps" not in apkbuild["options"]
+    native_cross_with_deps = cross == "native" and not pmb.build.autodetect.is_cross_native_nodeps(apkbuild)
 
     # Skip already built versions
     if not force and not pmb.build.is_necessary(args, carch, apkbuild):
@@ -103,14 +103,6 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
               apkbuild["pkgver"] + "-r" + apkbuild["pkgrel"] + ".apk")
     logging.info("(" + suffix + ") build " + output)
 
-    # Sanity check
-    if native_cross_with_deps:
-        logging.info("WARNING: Option !tracedeps is not set, but we're"
-                     " cross-compiling in the native chroot. This will probably"
-                     " fail!")
-        if strict:
-            logging.info("Strict building is not supported by native cross compile yet!")
-
     # Run abuild
     pmb.build.copy_to_buildpath(args, pkgname, suffix)
     cmd = []
@@ -133,7 +125,7 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
             # the rpath-link is a workaround: proper solution is to add a ld.so.conf?
             # https://sysprogs.com/w/fixing-rpath-link-issues-with-cross-compilers/
             env["LDFLAGS"] = "\"--sysroot=" + cbuildroot + " -L" + cbuildroot + \
-                             "/lib -Wl,-rpath-link," + cbuildroot + "/lib," + \
+                             "/lib -L" + cbuildroot + "/usr/lib -Wl,-rpath-link," + cbuildroot + "/lib," + \
                              "-rpath-link," + cbuildroot + "/usr/lib\""
             # FIXME: check if this is enough: SDL's pkg-config still returns just /usr/include/SDL?
             # May need a wrapper script that sets these immediately before running real pkg-config
