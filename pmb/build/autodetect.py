@@ -42,7 +42,7 @@ def carch(args, apkbuild, carch, strict=False):
     return apkbuild["arch"][0]
 
 
-def suffix(args, apkbuild, carch):
+def suffix(args, apkbuild, carch, strict):
     if carch == args.arch_native:
         return "native"
 
@@ -50,7 +50,10 @@ def suffix(args, apkbuild, carch):
     if pkgname.endswith("-repack"):
         return "native"
     if args.cross:
-        for pattern in pmb.config.build_cross_native:
+        build_cross_native = pmb.config.build_cross_native
+        if strict or args.prefer_distcc_cross:
+            build_cross_native = pmb.config.build_cross_native_nodeps
+        for pattern in build_cross_native:
             if fnmatch.fnmatch(pkgname, pattern):
                 return "native"
 
@@ -70,3 +73,14 @@ def crosscompile(args, apkbuild, carch, suffix):
     if suffix == "native":
         return "native"
     return "distcc"
+
+
+def is_cross_native_nodeps(apkbuild):
+    """
+        Checks if a package is in the build_cross_native_nodeps list.
+    """
+    pkgname = apkbuild["pkgname"]
+    for pattern in pmb.config.build_cross_native_nodeps:
+        if fnmatch.fnmatch(pkgname, pattern):
+            return True
+    return False

@@ -64,7 +64,8 @@ defaults = {
     # A higher value is typically desired, but this can lead to VERY long open
     # times on slower devices due to host systems being MUCH faster than the
     # target device: <https://github.com/postmarketOS/pmbootstrap/issues/429>
-    "iter_time": "200"
+    "iter_time": "200",
+    "prefer_distcc_cross": False,
 }
 
 #
@@ -132,7 +133,11 @@ build_packages = ["abuild", "build-base", "ccache"]
 
 # fnmatch for supported pkgnames, that can be directly compiled inside
 # the native chroot and a cross-compiler, without using distcc
-build_cross_native = ["linux-*", "chocolate-doom", "weston"]
+build_cross_native = ["linux-*", "weston"]
+
+# fnmatch for supported pkgnames, that can be directly compiled inside
+# the native chroot and a cross-compiler, without using distcc or any dependencies
+build_cross_native_nodeps = ["linux-*"]
 
 # Necessary kernel config options
 necessary_kconfig_options = {
