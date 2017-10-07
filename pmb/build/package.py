@@ -62,7 +62,9 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
     if native_cross_with_deps:
         pmb.build.init(args, "buildroot_" + carch)
     if len(apkbuild["makedepends"]):
+        # build: install in build chroot
         makedepends_build = apkbuild["makedepends"]
+        # host: install in foreign sysroot if cross compiling
         makedepends_host = []
         if native_cross_with_deps:
             if len(apkbuild["makedepends_build"]) != 0 and len(apkbuild["makedepends_host"]) != 0:
@@ -80,7 +82,7 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
         else:
             pmb.chroot.apk.install(args, makedepends_build, suffix)
             if len(makedepends_host) != 0:
-                pmb.chroot.apk.install(args, makedepends_build, "buildroot_" + carch)
+                pmb.chroot.apk.install(args, makedepends_host, "buildroot_" + carch)
 
     if cross:
         pmb.chroot.apk.install(args, ["gcc-" + carch_buildenv,
