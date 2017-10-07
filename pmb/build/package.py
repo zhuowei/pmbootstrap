@@ -90,6 +90,8 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
             pmb.chroot.apk.install(args, ["distcc"], suffix=suffix,
                                    build=False)
             pmb.chroot.distccd.start(args, carch_buildenv)
+        if native_cross_with_deps:
+            pmb.chroot.apk.install(args, ["cmake-cross-wrappers"], suffix=suffix);
 
     # Avoid re-building for circular dependencies
     if not force and not pmb.build.is_necessary(args, carch, apkbuild):
@@ -117,6 +119,9 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
             cbuildroot = "/home/user/cross_sysroot/chroot_buildroot_" + carch
             bind_sysroot_path = args.work + "/chroot_native" + cbuildroot
             pmb.helpers.mount.bind(args, foreign_sysroot_path, bind_sysroot_path)
+
+            # bind QT native tools on top of the chroot if it exists
+            pmb.helpers.mount.bind(args, args.work + "/chroot_native/usr/lib/qt5/bin", bind_sysroot_path + "/usr/lib/qt5/bin")
             # https://dev.alpinelinux.org/~tteras/bootstrap/abuild-crossbuild-aarch64.conf
             env["CBUILDROOT"] = cbuildroot
             env["CHOST"] = hostspec
@@ -131,6 +136,8 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
             # May need a wrapper script that sets these immediately before running real pkg-config
             env["PKG_CONFIG_PATH"] = cbuildroot + "/usr/lib/pkgconfig/:" + cbuildroot + "/usr/share/pkgconfig"
             env["PKG_CONFIG_SYSROOT_DIR"] = cbuildroot
+            # For CMake
+            env["PATH"] = "/usr/lib/cmake-cross-wrappers/" + carch + "/bin:" + pmb.config.chroot_path
 
     if cross == "distcc":
         env["PATH"] = "/usr/lib/distcc/bin:" + pmb.config.chroot_path

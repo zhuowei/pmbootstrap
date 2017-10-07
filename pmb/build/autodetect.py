@@ -50,6 +50,8 @@ def suffix(args, apkbuild, carch, strict):
     if pkgname.endswith("-repack"):
         return "native"
     if args.cross:
+        if "extra-cmake-modules" in apkbuild["makedepends"]:
+            return "native"
         build_cross_native = pmb.config.build_cross_native
         if strict or args.prefer_distcc_cross:
             build_cross_native = pmb.config.build_cross_native_nodeps
@@ -84,3 +86,16 @@ def is_cross_native_nodeps(apkbuild):
         if fnmatch.fnmatch(pkgname, pattern):
             return True
     return False
+
+
+def cmake_processor_for_carch(carch):
+    """
+        Translates a carch to the format CMake takes. (Should match uname -m's output on target.)
+    """
+    if carch == "armhf":
+        return "arm"
+    if carch == "aarch64":
+        return "aarch64"
+    if carch == "x86_64":
+        return "x86_64"
+    return None

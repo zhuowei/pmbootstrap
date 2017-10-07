@@ -1,0 +1,31 @@
+pkgname=cmake-cross-wrappers
+pkgver=1
+pkgrel=0
+pkgdesc="CMake wrappers and toolchain configurations for crossbuilds"
+url="https://github.com/postmarketOS"
+arch="noarch"
+license="MIT"
+depends=""
+makedepends=""
+source="template.toolchain.cmake cmake.sh"
+options="!check"
+
+package() {
+	local _archs="armhf aarch64"
+	for _arch in $_archs; do
+		_bindir="$pkgdir/usr/lib/cmake-cross-wrappers/$_arch/bin"
+		_hostspec="$(arch_to_hostspec $_arch)"
+		_processor="$_arch"
+		if [ "$_processor" = "armhf" ]
+		then
+			_processor="arm"
+		fi
+		mkdir -p "$_bindir"
+		cp $srcdir/cmake.sh $_bindir/cmake
+		chmod +x $_bindir/cmake
+		sed -e "s/REPLACE_PROCESSOR_REPLACE/$_processor/g" -e "s/REPLACE_CARCH_REPLACE/$_arch/g" \
+			-e "s/REPLACE_TRIPLE_REPLACE/$_hostspec/g" $srcdir/template.toolchain.cmake >$_bindir/toolchain.cmake
+	done
+}
+sha512sums="c5f0b39241edc6bba589cb6f31f98136bf78e1f16a5f66f369ba867be59b3bb572d3c23461d7a9923ad4f62215315be8ed607376c07ef17d8d277c6b97f2a88e  template.toolchain.cmake
+ba0fe854f7b405def91290537f487a27984c9c4b7030d6256386a23c1b013ed582193cbccdd382d9a0ddda19615a18c13cbfbcafab5b99d670d80a9d5dfcf2cd  cmake.sh"
