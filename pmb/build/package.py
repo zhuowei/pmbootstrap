@@ -100,7 +100,7 @@ def package(args, pkgname, carch, force=False, buildinfo=False, strict=False):
         env["CROSS_COMPILE"] = hostspec + "-"
         env["CC"] = hostspec + "-gcc"
     if cross == "distcc":
-        env["PATH"] = "/usr/lib/distcc/bin:" + pmb.config.chroot_path
+        env["PATH"] = pmb.config.chroot_path.replace("/usr/lib/ccache/bin", "/usr/lib/ccache/bin:/usr/lib/distcc/bin")
         env["DISTCC_HOSTS"] = "127.0.0.1:" + args.port_distccd
     for key, value in env.items():
         cmd += [key + "=" + value]
