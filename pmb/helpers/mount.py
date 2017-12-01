@@ -94,7 +94,11 @@ def umount_all_list(prefix, source="/proc/mounts"):
                 raise RuntimeError("Failed to parse line in " + source + ": " +
                                    line)
             if words[1].startswith(prefix):
-                ret.append(words[1])
+                p = words[1]
+                deletedStr = r"\040(deleted)"
+                if p.endswith(deletedStr):
+                    p = p[:-len(deletedStr)]
+                ret.append(p)
     ret.sort(reverse=True)
     return ret
 
