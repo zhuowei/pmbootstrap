@@ -1,0 +1,199 @@
+# APKBUILD based on linux-postmarketos-mainline
+# Changes:
+# - changed Source section to download from GitHub
+# - disabled modules and the associated -dev subpackage
+# defconfig is the Fail0verflow defconfig with CONFIG_DM_CRYPT enabled
+# and blobs removed from CONFIG_EXTRA_FIRMWARE
+# xusb.bin and vic04_ucode.bin are placed into initramfs instead,
+# and the GPU/WiFi blobs are fetched from linux-firmware
+_flavor=nintendo-nx
+_config="config-${_flavor}.${CARCH}"
+
+pkgname=linux-${_flavor}
+
+pkgver=4.16_rc1
+_pkgver=${pkgver/_/-}
+_kernver=${pkgver%_rc*}
+_mainver=${_kernver%.*}
+_patchlevel=${_kernver/$_mainver./}
+_basever=${_mainver}.$((_patchlevel-1))
+pkgrel=0
+
+arch="aarch64"
+pkgdesc="Fail0verflow's mainline Linux port for the Switch"
+url="https://github.com/fail0verflow/switch-linux"
+depends=""
+makedepends="perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev libressl-dev file bison flex"
+options="!strip !check !tracedeps"
+install=
+
+# Source
+_repository=switch-linux
+_commit="01b404c2112028a48ccf533b84218689032054c3"
+_config="config-${_flavor}.${arch}"
+source="
+	$pkgname-$_commit.tar.gz::https://github.com/fail0verflow/switch-linux/archive/${_commit}.tar.gz
+	$_config
+"
+builddir="$srcdir/${_repository}-${_commit}"
+
+#subpackages="$pkgname-dev"
+
+license="GPL2"
+_abi_release=$_pkgver
+_carch=${CARCH}
+case "$_carch" in
+aarch64*) _carch="arm64" ;;
+arm*) _carch="arm" ;;
+ppc*) _carch="powerpc" ;;
+s390*) _carch="s390" ;;
+esac
+
+HOSTCC="${CC:-gcc}"
+HOSTCC="${HOSTCC#${CROSS_COMPILE}}"
+
+prepare() {
+	local _patch_failed=
+	cd "$builddir"
+	# first apply patches in specified order
+	for i in $source; do
+		case $i in
+		*.patch|*.patch::*)
+			_patch=${i%::*}
+			msg "Applying $_patch..."
+			if ! patch -s -p1 -N -i "$srcdir"/$_patch; then
+				echo $_patch >>failed
+				_patch_failed=1
+			fi
+			;;
+		esac
+	done
+
+	if ! [ -z "$_patch_failed" ]; then
+		error "The following patches failed:"
+		cat failed
+		return 1
+	fi
+
+	mkdir -p "$srcdir"/build
+	cp -v "$srcdir"/$_config "$srcdir"/build/.config
+	make -C "$builddir" O="$srcdir"/build ARCH="$_carch" HOSTCC="$HOSTCC" \
+		olddefconfig
+}
+
+
+
+# this is so we can do: 'abuild menuconfig' to reconfigure kernel
+menuconfig() {
+	cd "$srcdir"/build
+	make ARCH="$_carch" menuconfig
+	cp .config "$startdir"/$_config
+}
+
+build() {
+	cd "$srcdir"/build
+	unset LDFLAGS
+	make ARCH="$_carch" CC="${CC:-gcc}" \
+		KBUILD_BUILD_VERSION="$((pkgrel + 1 ))-${_flavor}" \
+		CFLAGS_MODULE=-fno-pic
+}
+
+package() {
+	cd "$srcdir/build/arch/${_carch}/boot"
+
+	if [ "$CARCH" == "aarch64" ]; then
+		install -Dm644 "$srcdir/build/arch/${_carch}/boot/Image" \
+			"$pkgdir/boot/vmlinuz-$_flavor"
+	else
+		install -Dm644 "$srcdir/build/arch/${_carch}/boot/"*zImage \
+			"$pkgdir/boot/vmlinuz-$_flavor"
+	fi
+
+	install -D "$srcdir/build/include/config/kernel.release" \
+		"$pkgdir/usr/share/kernel/$_flavor/kernel.release"
+
+	cd "$srcdir"/build
+
+	local _install
+	#case "$CARCH" in
+	#aarch64*|arm*)	_install="modules_install dtbs_install" ;;
+	#*)		_install="modules_install" ;;
+	#esac
+	# switch-linux kernel doesn't use modules
+	_install="dtbs_install"
+
+	make -j1 $_install \
+		ARCH="$_carch" \
+		INSTALL_MOD_PATH="$pkgdir" \
+		INSTALL_DTBS_PATH="$pkgdir/usr/share/dtb"
+}
+
+
+dev() {
+	# copy the only the parts that we really need for build 3rd party
+	# kernel modules and install those as /usr/src/linux-headers,
+	# simlar to what ubuntu does
+	#
+	# this way you dont need to install the 300-400 kernel sources to
+	# build a tiny kernel module
+	#
+	pkgdesc="Headers and script for third party modules for postmarketos kernel"
+	depends="gmp-dev bash perl"
+	local dir="$subpkgdir"/usr/src/linux-headers-${_abi_release}
+
+	# first we import config, run prepare to set up for building
+	# external modules, and create the scripts
+	mkdir -p "$dir"
+	cp "$srcdir"/$_config "$dir"/.config
+	make -j1 -C "$builddir" O="$dir" ARCH="$_carch" HOSTCC="$HOSTCC" \
+		olddefconfig prepare modules_prepare scripts
+
+	# needed for 3rd party modules
+	# https://bugzilla.kernel.org/show_bug.cgi?id=11143
+	case "$CARCH" in
+	ppc*) (cd "$dir" && make arch/powerpc/lib/crtsavres.o);;
+	esac
+
+	# remove the stuff that points to real sources. we want 3rd party
+	# modules to believe this is the soruces
+	rm "$dir"/Makefile "$dir"/source
+
+	# copy the needed stuff from real sources
+	#
+	# this is taken from ubuntu kernel build script
+	# http://kernel.ubuntu.com/git/ubuntu/ubuntu-zesty.git/tree/debian/rules.d/3-binary-indep.mk
+
+	cd "$builddir"
+	find . -path './include/*' -prune \
+		-o -path './scripts/*' -prune -o -type f \
+		\( -name 'Makefile*' -o -name 'Kconfig*' -o -name 'Kbuild*' -o \
+		   -name '*.sh' -o -name '*.pl' -o -name '*.lds' \) \
+		-print | cpio -pdm "$dir"
+	cp -a scripts include "$dir"
+	find $(find arch -name include -type d -print) -type f \
+		| cpio -pdm "$dir"
+
+	install -Dm644 "$srcdir"/build/Module.symvers \
+		"$dir"/Module.symvers
+
+	mkdir -p "$subpkgdir"/lib/modules/${_abi_release}
+	ln -sf /usr/src/linux-headers-${_abi_release} \
+		"$subpkgdir"/lib/modules/${_abi_release}/build
+
+	# cross-compiling: delete binaries with host arch and replace them with
+	# symlinks to binaries with the target arch (packaged in kernel-scripts)
+	if [ -n "$CROSS_COMPILE" ]; then
+		msg "Symlinking binary scripts..."
+		depends="$depends kernel-scripts"
+		cd "$dir/scripts"
+		local i
+		for i in $(find . -type f); do
+			local type="$(file -b --mime-type "$i")"
+			[ "$type" != "application/x-sharedlib" ] && continue
+			local native="/usr/bin/kernel-scripts/$(echo "$i" | cut -d '/' -f 2-)"
+			ln -svf "$native" "$i"
+		done
+	fi
+}
+sha512sums="e0d935b90d71a87aa89d7fabfc1cd60384a713ae1bf0c42a57b5b5137656dca28fde3eb414776050dcafe0693580fcc850b48fd010370f74a537a29de00d2f46  linux-nintendo-nx-01b404c2112028a48ccf533b84218689032054c3.tar.gz
+590e07c0b9e642208f87c661a77afe0eea4d9f37b0859ff065bccb4ee614d0da857e1699bcaf010d20f23461a4e3ed98e18ec9073a4d4393b5067d4cc81e3415  config-nintendo-nx.aarch64"
