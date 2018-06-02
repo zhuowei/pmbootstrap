@@ -1,8 +1,8 @@
 pkgname=uboot-nintendo-nx
 pkgver=2018.01
 pkgrel=0
-pkgdesc="Fail0verflow's U-Boot port for the Switch, used as a Coreboot payload. This includes natinusala's patch for SD card boot."
-url="https://github.com/natinusala/switch-u-boot"
+pkgdesc="Fail0verflow's U-Boot port for the Switch, used as a Coreboot payload."
+url="https://github.com/fail0verflow/switch-u-boot"
 # Note: this should be a aarch64 package, but
 # this is need by native chroot as a makedepend for coreboot-nintendo-nx
 # So it must be noarch with !archcheck
@@ -14,9 +14,9 @@ install=""
 options="!archcheck"
 
 _repository="switch-u-boot"
-_commit="9f08090e970178c77f148e2440f5e55b94690663"
+_commit="a2d885d448eacb72085f262f9b28951384a8e678"
 source="
-	$pkgname-$_commit.tar.gz::https://github.com/natinusala/${_repository}/archive/${_commit}.tar.gz
+	$pkgname-$_commit.tar.gz::https://github.com/fail0verflow/${_repository}/archive/${_commit}.tar.gz
 "
 builddir="$srcdir/${_repository}-${_commit}"
 
@@ -37,4 +37,4 @@ package() {
 		"$pkgdir/usr/share/uboot-nintendo-nx/u-boot.elf"
 }
 
-sha512sums="0ee3badde2466966ffca30d8cbda01bd1e82e4a505655d8533906a0fbd63119204135fd4b42b2aff27beced882143b60cb8a92c44398dda7c26d97b3126ba13b  uboot-nintendo-nx-9f08090e970178c77f148e2440f5e55b94690663.tar.gz"
+sha512sums="d3db8298f9a7e922bae074c2fa6ca8ad643478e848a3777b3bd732c9e4d2e515eeb310042077e1d168075406ee6a2cfeb7c7b5059d0ff146dc79914dcea3eb91  uboot-nintendo-nx-a2d885d448eacb72085f262f9b28951384a8e678.tar.gz"
