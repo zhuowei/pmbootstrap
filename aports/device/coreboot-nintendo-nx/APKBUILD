@@ -1,0 +1,98 @@
+pkgname=coreboot-nintendo-nx
+pkgver=4.7
+pkgrel=0
+pkgdesc="Coreboot port to the Switch by Fail0verflow; includes u-boot payload and Nvidia proprietary DDR calibration blob"
+url="https://github.com/fail0verflow/switch-coreboot"
+# Note: this should be a aarch64 package, but
+# this is need by native chroot to boot the Switch
+# So it must be noarch with !archcheck
+arch="noarch"
+# is this right? since we include a Nvidia proprietary blob
+# but it's in the coreboot filesystem, not linked into the code
+license="GPL-2.0"
+depends=""
+makedepends="bzip2 xz zlib-dev bash m4 bison flex gcc-armhf g++-armhf gcc-aarch64 g++-aarch64 ccache-cross-symlinks uboot-nintendo-nx"
+install=""
+options="!archcheck"s
+
+# Source
+_repository="switch-coreboot"
+_commit="1becafebcdfa4d5daf276bb6446563ab872a41cb"
+
+# todo: are all these submodules needed?
+_atf_commit="66c6a0c87982db087b3bab35316e7a59127c12fd"
+_blobs_commit="19dea8d171544f01f12ee6b78af0cc356ab994aa"
+_chromeec_commit="9fb10386a720d270e37ce61da3ff3a6d5a69951e"
+_gfxinit_commit="42fb2d065d604eb08c723ac6b96aeebb4c84cbd3"
+_hwbase_commit="66859712e4817288591908d737dbf41ddea31c3a"
+_vboot_commit="e0b3841863281a3fc3b188bfbab55d401fabdc73"
+_cbootimage_commit="64045f993c2cd8989838aeaad3d22107d96d5596"
+
+# note: tegra_mtc.bin does have sha256 hash edb32e3f9ed15b55e780e8a01ef927a3b8a1f25b34a6f95467041d89537
+# per https://fail0verflow.com/blog/2018/shofel2/
+
+# manually download git submodules
+source="
+	$pkgname-$_commit.tar.gz::https://github.com/fail0verflow/${_repository}/archive/${_commit}.tar.gz
+	https://review.coreboot.org/cgit/blobs.git/snapshot/blobs-${_blobs_commit}.tar.bz2
+	https://review.coreboot.org/cgit/nvidia-cbootimage.git/snapshot/nvidia-cbootimage-${_cbootimage_commit}.tar.bz2
+	https://review.coreboot.org/cgit/vboot.git/snapshot/vboot-${_vboot_commit}.tar.bz2
+	https://github.com/fail0verflow/switch-arm-trusted-firmware/archive/${_atf_commit}.tar.gz
+	https://review.coreboot.org/cgit/chrome-ec.git/snapshot/chrome-ec-${_chromeec_commit}.tar.bz2
+	https://review.coreboot.org/cgit/libhwbase.git/snapshot/libhwbase-${_hwbase_commit}.tar.bz2
+	https://review.coreboot.org/cgit/libgfxinit.git/snapshot/libgfxinit-${_gfxinit_commit}.tar.bz2
+	acpica-unix2-20161222.tar.gz.NOUNPACK::https://acpica.org/sites/acpica/files/acpica-unix2-20161222.tar.gz
+	https://0w0.st/tegra_mtc.bin
+"
+builddir="$srcdir/${_repository}-${_commit}"
+
+prepare() {
+	cd "$builddir"
+	rmdir 3rdparty/blobs util/nvidia/cbootimage 3rdparty/vboot 3rdparty/arm-trusted-firmware 3rdparty/chromeec 3rdparty/libhwbase 3rdparty/libgfxinit
+	ln -s "$srcdir/blobs-${_blobs_commit}" 3rdparty/blobs
+	ln -s "$srcdir/nvidia-cbootimage-${_cbootimage_commit}" util/nvidia/cbootimage
+	ln -s "$srcdir/vboot-${_vboot_commit}" 3rdparty/vboot
+	ln -s "$srcdir/switch-arm-trusted-firmware-${_atf_commit}" 3rdparty/arm-trusted-firmware
+	ln -s "$srcdir/chrome-ec-${_chromeec_commit}" 3rdparty/chromeec
+	ln -s "$srcdir/libhwbase-${_hwbase_commit}" 3rdparty/libhwbase
+	ln -s "$srcdir/libgfxinit-${_gfxinit_commit}" 3rdparty/libgfxinit
+	ln -s "$srcdir/tegra_mtc.bin" src/soc/nvidia/tegra210/tegra_mtc.bin
+	mkdir -p util/crossgcc/tarballs
+	ln -s "$srcdir/acpica-unix2-20161222.tar.gz.NOUNPACK" util/crossgcc/tarballs/acpica-unix2-20161222.tar.gz
+	mkdir "$srcdir/u-boot"
+	ln -s /usr/share/uboot-nintendo-nx/u-boot.elf "$srcdir/u-boot/u-boot.elf"
+}
+
+build() {
+	cd "$builddir"
+	# we need to cross compile for two architectures
+	# since the Tegra X1's boot coprocessor is a 32-bit ARM
+	# and the main processors are 64-bit AArch64
+	export CROSS_COMPILE=
+	export CROSS_COMPILE_arm=armv6-alpine-linux-muslgnueabihf-
+	export CROSS_COMPILE_arm64="ccache aarch64-alpine-linux-musl-"
+	make nintendo_switch_defconfig
+	make iasl
+	make
+}
+
+check() {
+	cd "$builddir"
+}
+
+package() {
+	cd "$builddir"
+	install -D "build/coreboot.rom" \
+		"$pkgdir/usr/share/coreboot-nintendo-nx/coreboot.rom"
+}
+
+sha512sums="e252e781b00b5456bded76e7acfa5b09878fd6287da2d7ffaf0af70ee5dc71bdf56e5e418f65c5156ffa57d7d22f4a4727fb5e35871d75d6e81e90e573ed5fb8  coreboot-nintendo-nx-1becafebcdfa4d5daf276bb6446563ab872a41cb.tar.gz
+cf1462cc41a1ca48f6f93a03cae5bcc9001c0fdc46ff6a6bddde2ca1fed2761b8a2620b4dbd9116de9d7f2d4a4537cff3fd82378b6ac52dcd77e49d4b666c19e  blobs-19dea8d171544f01f12ee6b78af0cc356ab994aa.tar.bz2
+0b16d21fc54c0f23873605c58b236ba87bc16b97e8eab59385bb2ba8d884b47f1b5ac99a57ae5d4d7fe41f2294498a5da8edf70f6da043168f961c23885e3f0d  nvidia-cbootimage-64045f993c2cd8989838aeaad3d22107d96d5596.tar.bz2
+2d7615dc0fb8a9fff015ea7c163861cf5560858980c0bbdb167ac080e3474b360f9da652a500f2899c0455a6277b7f1c46633cc6038248e046b0e0329d845102  vboot-e0b3841863281a3fc3b188bfbab55d401fabdc73.tar.bz2
+9322ada4d32f695bac168097b0c83b370a31243af884943db4bf322d5b0da8661a8f0eb934eb2366a3eb883023b91350ad0a5fe1a3891defdd5141f52b1648d9  66c6a0c87982db087b3bab35316e7a59127c12fd.tar.gz
+e56f36c5ca3180a62e88c00d15d48e25c84782c0d16fcd15ba0bd176b6f2a14c5b2905807ca325ed32c63e5c0b433194341c1efa0925e0de071d0ed179d45515  chrome-ec-9fb10386a720d270e37ce61da3ff3a6d5a69951e.tar.bz2
+c2c64a8c49821c37f47d5b5c57701a8bb8617f69a7e3480cded31c027c70160fad3a9ecdaf13495afc5859dc3bc631ff916d31e906342f06c5a35bd3cb937c0b  libhwbase-66859712e4817288591908d737dbf41ddea31c3a.tar.bz2
+51a2d8fc89ab109e67fc288d914565ed1c458f0c2ac7df2b210445827a6c0131cd536d89105b6f0de24bb75e4dcf2c0adf73fe79e729da06856fe6196b97e8dd  libgfxinit-42fb2d065d604eb08c723ac6b96aeebb4c84cbd3.tar.bz2
+3e116ea2c559bd9343ac9ccfac632626f42e7598c1cc95a4b906e28ceebb81a4a22cbcda61f1e0b354dd002978c1286a2cac4f9cacef3d8f255b816db0b179a0  acpica-unix2-20161222.tar.gz.NOUNPACK
+34372be8a670a35913d3688ce3e033623af04e4f3334de457e9f24c2f57e3e1a2960ad84e7f2fb69ba977841220d6047893d6d8a51b76cbc23535540ce720893  tegra_mtc.bin"

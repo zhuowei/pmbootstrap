@@ -9,7 +9,7 @@ url="https://github.com/natinusala/switch-u-boot"
 arch="noarch"
 license="GPL-2.0-or-later"
 depends=""
-makedepends="gcc-aarch64 g++-aarch64 python-dev swig"
+makedepends="gcc-aarch64 g++-aarch64 ccache-cross-symlinks python-dev swig"
 install=""
 options="!archcheck"
 
