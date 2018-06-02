@@ -296,7 +296,7 @@ install_user_groups = ["wheel", "video", "audio", "input"]
 # FLASH
 #
 
-flash_methods = ["fastboot", "heimdall", "0xffff", "none"]
+flash_methods = ["fastboot", "heimdall", "0xffff", "shofel2", "none"]
 
 # These folders will be mounted at the same location into the native
 # chroot, before the flash programs get started.
@@ -378,6 +378,15 @@ flashers = {
                               "$RECOVERY_ZIP"]],
             }
     },
+    "shofel2": {
+        "depends": ["shofel2-nintendo-nx"],
+        "actions":
+                {
+                    "list_devices": [["python3", "/usr/share/shofel2-nintendo-nx/exploit/shofel2.py",
+                              "/usr/share/shofel2-nintendo-nx/exploit/cbfs.bin",
+                              "/usr/share/coreboot-nintendo-nx/coreboot.rom"]],
+        },
+    }
 }
 
 #

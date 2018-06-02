@@ -19,5 +19,5 @@ deviceinfo_dev_touchscreen_calibration=""
 deviceinfo_dev_keyboard=""
 
 # Bootloader related
-deviceinfo_flash_method="none"
+deviceinfo_flash_method="shofel2"
 
