@@ -1,0 +1,42 @@
+# Contributor:
+# Maintainer:
+pkgname=shofel2-nintendo-nx
+pkgver=1.0
+pkgrel=0
+pkgdesc="Fail0verflow's tool to boot Nintendo Switch from Tegra RCM mode"
+url="https://github.com/fail0verflow/shofel2"
+arch="noarch"
+license="BSD-3-Clause"
+depends="python3 py-usb libusb coreboot-nintendo-nx"
+makedepends="gcc-armhf g++-armhf ccache-cross-symlinks"
+install=""
+# Source
+_repository="shofel2"
+_commit="e9dd9a4002a8e825257d863b7ea26e13e3033fde"
+source="
+	$pkgname-$_commit.tar.gz::https://github.com/fail0verflow/${_repository}/archive/${_commit}.tar.gz
+	0001-force-soft-float-ABI-for-building-with-Alpine-s-armh.patch
+"
+builddir="$srcdir/${_repository}-${_commit}"
+
+build() {
+	cd "$builddir"
+	cd exploit
+	export TOOLCHAIN=armv6-alpine-linux-muslgnueabihf-
+	make
+}
+
+check() {
+	cd "$builddir"
+}
+
+package() {
+	cd "$builddir"
+	install -D "exploit/shofel2.py" \
+		"$pkgdir/usr/share/shofel2-nintendo-nx/exploit/shofel2.py"
+	install -D "exploit/cbfs.bin" \
+		"$pkgdir/usr/share/shofel2-nintendo-nx/exploit/cbfs.bin"
+}
+
+sha512sums="9808b4e74a4cc895bc84fd65841e0dd53370f5e120894dcf398bd483d19a52adce4128ca9dae28d8cc3b4c07e7934baf5da9a3efa1acdb744dd2aa4c6e237f47  shofel2-nintendo-nx-e9dd9a4002a8e825257d863b7ea26e13e3033fde.tar.gz
+b0981aa6a041499c70480691874495afa75abc237e482ccadd30869218bdfd43d69e1a044208c1328a0531a6d89758c74f7fd9616c7fd68e6191d0dae41877f6  0001-force-soft-float-ABI-for-building-with-Alpine-s-armh.patch"

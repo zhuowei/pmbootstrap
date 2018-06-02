@@ -1,0 +1,27 @@
+From 48eddb6a6c628c6a0092c0782014260057a140af Mon Sep 17 00:00:00 2001
+From: Zhuowei Zhang <zhuoweizhang@yahoo.com>
+Date: Sat, 2 Jun 2018 18:20:51 -0400
+Subject: [PATCH] force soft float ABI for building with Alpine's armhf cross
+ compiler
+
+---
+ exploit/Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/exploit/Makefile b/exploit/Makefile
+index c8bdd15..06dbb4b 100644
+--- a/exploit/Makefile
++++ b/exploit/Makefile
+@@ -6,7 +6,8 @@ OBJCOPY = $(TOOLCHAIN)objcopy
+ CFLAGS := -march=armv4t -mthumb -Wall -Werror -Os -MMD -ffreestanding \
+ 	-fno-common	-fomit-frame-pointer -nostdlib -fno-builtin-printf \
+ 	-fno-asynchronous-unwind-tables -fPIE -fno-builtin -fno-exceptions \
+-	-Wl,--no-dynamic-linker,--build-id=none,-T,romhax.ld
++	-Wl,--no-dynamic-linker,--build-id=none,-T,romhax.ld \
++	-mfloat-abi=soft
+ CXXFLAGS := $(CFLAGS) -std=gnu++14
+ CFLAGS += -std=gnu11
+ 
+-- 
+2.7.4
+
