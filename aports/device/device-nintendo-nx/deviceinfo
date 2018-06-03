@@ -18,6 +18,8 @@ deviceinfo_dev_touchscreen=""
 deviceinfo_dev_touchscreen_calibration=""
 deviceinfo_dev_keyboard=""
 
+deviceinfo_extra_files_initfs="/lib/firmware/nvidia/tegra210/xusb.bin /lib/firmware/nvidia/tegra210/vic04_ucode.bin"
+
 # Bootloader related
 deviceinfo_flash_method="shofel2"
 
