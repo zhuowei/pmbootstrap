@@ -2,6 +2,7 @@
 # Changes:
 # - changed Source section to download from GitHub
 # - disabled modules and the associated -dev subpackage
+# - copy Image.gz not Image
 # defconfig is the Fail0verflow defconfig with CONFIG_DM_CRYPT enabled
 # and blobs removed from CONFIG_EXTRA_FIRMWARE
 # xusb.bin and vic04_ucode.bin are placed into initramfs instead,
@@ -102,7 +103,7 @@ package() {
 	cd "$srcdir/build/arch/${_carch}/boot"
 
 	if [ "$CARCH" == "aarch64" ]; then
-		install -Dm644 "$srcdir/build/arch/${_carch}/boot/Image" \
+		install -Dm644 "$srcdir/build/arch/${_carch}/boot/Image.gz" \
 			"$pkgdir/boot/vmlinuz-$_flavor"
 	else
 		install -Dm644 "$srcdir/build/arch/${_carch}/boot/"*zImage \
