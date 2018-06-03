@@ -1,0 +1,33 @@
+pkgname=imx-usb-loader
+pkgver=1.0
+pkgrel=0
+pkgdesc="Download and execute code on Freescale i.MX5/i.MX6/i.MX7 and Vybrid SoCs through the Serial Download Protocol (SDP)"
+url="https://github.com/boundarydevices/imx_usb_loader"
+arch="all"
+license="LGPL-2.1-or-later"
+depends="libusb"
+makedepends="libusb-dev linux-headers"
+install=""
+# Source
+_repository="imx_usb_loader"
+_commit="2913fd0818ffa8487f63ae8990bdf905ac8bbef7"
+source="
+	$pkgname-$_commit.tar.gz::https://github.com/boundarydevices/${_repository}/archive/${_commit}.tar.gz
+"
+builddir="$srcdir/${_repository}-${_commit}"
+
+build() {
+	cd "$builddir"
+	make
+}
+
+check() {
+	cd "$builddir"
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="45199b9b26902f0d2f599b7846499e3452bb6ad9f9c65d03867a84d89c2b9987c7d6525545b635777f15c7ce4f7d2c8ebcf15d10f370287abb52e15068e9d117  imx-usb-loader-2913fd0818ffa8487f63ae8990bdf905ac8bbef7.tar.gz"
