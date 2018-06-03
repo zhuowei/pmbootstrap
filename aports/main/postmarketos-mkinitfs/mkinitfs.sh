@@ -129,7 +129,8 @@ get_binaries()
 			BINARIES="${BINARIES} ${line}"
 		done < "$file"
 	done
-	lddtree -l $BINARIES | sort -u
+	bin=$(lddtree -l $BINARIES | sort -u)
+	echo "${bin} ${deviceinfo_extra_files_initfs}"
 }
 
 # Collect non-binary files for osk-sdl and its dependencies
