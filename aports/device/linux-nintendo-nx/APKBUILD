@@ -24,7 +24,7 @@ arch="aarch64"
 pkgdesc="Fail0verflow's mainline Linux port for the Switch"
 url="https://github.com/fail0verflow/switch-linux"
 depends=""
-makedepends="perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev libressl-dev file bison flex"
+makedepends="perl sed installkernel bash gmp-dev bc linux-headers elfutils-dev libressl-dev file bison flex linux-firmware-nvidia"
 options="!strip !check !tracedeps"
 install=
 
@@ -197,4 +197,4 @@ dev() {
 	fi
 }
 sha512sums="e0d935b90d71a87aa89d7fabfc1cd60384a713ae1bf0c42a57b5b5137656dca28fde3eb414776050dcafe0693580fcc850b48fd010370f74a537a29de00d2f46  linux-nintendo-nx-01b404c2112028a48ccf533b84218689032054c3.tar.gz
-590e07c0b9e642208f87c661a77afe0eea4d9f37b0859ff065bccb4ee614d0da857e1699bcaf010d20f23461a4e3ed98e18ec9073a4d4393b5067d4cc81e3415  config-nintendo-nx.aarch64"
+af7459f43c2b9f1688b2acbdfb3cddf5eb48aa72b93d431f410f4c9d2e601a925f9f470219b5bd7ab765c3048730f7e5650517c3b0b9d7a0c74e3b770134857e  config-nintendo-nx.aarch64"
