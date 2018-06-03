@@ -1,8 +1,7 @@
 # Reference: <https://postmarketos.org/devicepkg>
 # Device tree for Nintendo Switch
 # changes:
-# - switch.scr from shofel2; modified to load an initramfs (for pmOS decryption)
-# - initramfs hook: USB and screen firmware no longer embedded in kernel to make building kernel easier
+# - deviceinfo: USB and screen firmware no longer embedded in kernel to make building kernel easier
 #   so need to copy them into initramfs
 pkgname="device-nintendo-nx"
 pkgdesc="Nintendo Switch"
@@ -16,20 +15,14 @@ depends="postmarketos-base linux-nintendo-nx mesa-dri-swrast linux-firmware-nvid
 makedepends="devicepkg-dev uboot-tools"
 source="
 	deviceinfo
-	switch.scr
 "
 
 build() {
 	devicepkg_build $startdir $pkgname
-	# build u-boot boot script (from github.com/fail0verflow/shofel2)
-	mkimage -A arm64 -T script -C none -n "boot.scr" -d "$srcdir/switch.scr" "$srcdir/switch.scr.img"
 }
 
 package() {
 	devicepkg_package $startdir $pkgname
-	install -D "$srcdir/switch.scr.img" \
-		"$pkgdir/boot/switch.scr.img"
 }
 
-sha512sums="8ecbfbb41da99ccc722ebd618efcf6949e2e748c874b8aec616c59c5bec3917c665a61d3260a7723c867e1c1709208a8d672481ce98ea3f15fbfc3d8ed8232f2  deviceinfo
-825c9f8b599a025124485ae13d38a52f623325faf0d539a9dd7745a992ae04a6e4cd177ea53153214137f884d8f3b1b82fbc5904428a3ecdc31f6e60e951f25f  switch.scr"
+sha512sums="8aea46f5183228403a806ba391bafaca955ae57f3559b690deba839db908bf970f163c7540e6e9614e02e8a492dcb8baa097283f0da47973ab44fe0fcacb825d  deviceinfo"
