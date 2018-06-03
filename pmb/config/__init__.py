@@ -379,17 +379,15 @@ flashers = {
             }
     },
     "shofel2": {
-        "depends": ["shofel2-nintendo-nx", "imx-usb-loader"],
+        "depends": ["shofel2-nintendo-nx", "postmarketos-shofel2-nintendo-nx"],
         "actions":
                 {
-                    "list_devices": [
+                    "boot": [
                         ["python3", "/usr/share/shofel2-nintendo-nx/exploit/shofel2.py",
                          "/usr/share/shofel2-nintendo-nx/exploit/cbfs.bin",
                          "/usr/share/coreboot-nintendo-nx/coreboot.rom"],
-                    ],
-                    "boot": [
-                        ["imx_usb", "-c",
-                         "/home/pmos/shofel2/shofel2-e9dd9a4002a8e825257d863b7ea26e13e3033fde/usb_loader"],
+			["sleep", "2"],
+                        ["ash", "/usr/share/postmarketos-shofel2-nintendo-nx/boot.sh", "$BOOT/vmlinuz-$FLAVOR", "$BOOT/initramfs-$FLAVOR", "$KERNEL_CMDLINE"],
                     ],
         },
     }

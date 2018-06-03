@@ -1,0 +1,20 @@
+pkgname=postmarketos-shofel2-nintendo-nx
+pkgver=0.1
+pkgrel=0
+pkgdesc="Script to boot kernel via USB using ShofEL2's Coreboot/U-Boot"
+url="https://github.com/postmarketOS/pmbootstrap"
+arch="noarch"
+license="MIT"
+depends="uboot-tools imx-usb-loader"
+makedepends=""
+install=""
+source="boot.sh"
+builddir="$srcdir/"
+
+package() {
+	cd "$builddir"
+	install -D "$srcdir/boot.sh" \
+		"$pkgdir/usr/share/postmarketos-shofel2-nintendo-nx/boot.sh"
+}
+
+sha512sums="bd626400a4e93d0a46a9b7c46a7a0b674b839e676d463511d7bebf682b6436379e6d681cd7baafba0a9d40b5dc428d3377ea3f6a9f2f7d4a70ba7103114a1cf4  boot.sh"
